@@ -366,7 +366,7 @@ class RobotArmSDK:
         Returns:
             bool: 移動成功したかどうか
         """
-        home_angles = [0.0] * self.num_joints
+        home_angles = [90.0] * self.num_joints
         return self.set_all_joint_angles(home_angles)
 
     def execute_trajectory(
