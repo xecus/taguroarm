@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ロボットアームSDK 説明書</title>
+    <style>
+        @media print {
+            .page-break { page-break-before: always; }
+            body { font-size: 12pt; }
+        }
+        
+        body {
+            font-family: 'Yu Gothic', 'Hiragino Sans', 'Meiryo', sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #2c5aa0;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #2c5aa0;
+            font-size: 2.5em;
+            margin: 0;
+        }
+        
+        .header .version {
+            color: #666;
+            font-size: 1.1em;
+            margin-top: 10px;
+        }
+        
+        h2 {
+            color: #2c5aa0;
+            border-left: 5px solid #2c5aa0;
+            padding-left: 15px;
+            margin-top: 40px;
+        }
+        
+        h3 {
+            color: #4a6741;
+            margin-top: 30px;
+        }
+        
+        .toc {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .toc h3 {
+            margin-top: 0;
+            color: #2c5aa0;
+        }
+        
+        .toc ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        
+        .toc li {
+            margin: 5px 0;
+            padding-left: 20px;
+        }
+        
+        .method-signature {
+            background-color: #f1f3f4;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        
+        .parameters {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-left: 3px solid #28a745;
+            margin: 10px 0;
+        }
+        
+        .returns {
+            background-color: #fff3cd;
+            padding: 15px;
+            border-left: 3px solid #ffc107;
+            margin: 10px 0;
+        }
+        
+        .example {
+            background-color: #e7f3ff;
+            padding: 15px;
+            border-left: 3px solid #007bff;
+            margin: 15px 0;
+        }
+        
+        .example h4 {
+            margin-top: 0;
+            color: #007bff;
+        }
+        
+        .code {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        
+        .warning {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        
+        .warning::before {
+            content: "⚠️ 注意: ";
+            font-weight: bold;
+        }
+        
+        .info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        
+        .info::before {
+            content: "ℹ️ 情報: ";
+            font-weight: bold;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+        
+        .footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ロボットアームSDK</h1>
+        <div class="version">開発者向け説明書 v1.0</div>
+        <div class="version">UDP通信による関節制御システム</div>
+    </div>
+
+    <div class="toc">
+        <h3>目次</h3>
+        <ul>
+            <li>1. 概要</li>
+            <li>2. インストールと要件</li>
+            <li>3. クラス初期化</li>
+            <li>4. 接続管理</li>
+            <li>5. 関節制御</li>
+            <li>6. 安全機能</li>
+            <li>7. 実用例</li>
+            <li>8. トラブルシューティング</li>
+        </ul>
+    </div>
+
+    <h2>1. 概要</h2>
+    <p>RobotArmSDKは、UDP通信を使用してロボットアームの関節角度を制御するためのPython SDKです。6軸ロボットアームの各関節を個別または同時に制御することができ、安全な動作のための角度制限や段階的な動作制御機能を提供します。</p>
+
+    <div class="info">
+        このSDKは産業用ロボットアームの制御を想定して設計されており、UDP通信によるリアルタイム制御が可能です。
+    </div>
+
+    <h3>主な機能</h3>
+    <ul>
+        <li>UDP通信による高速なロボットアーム制御</li>
+        <li>個別関節および全関節の角度制御</li>
+        <li>安全な段階的動作制御</li>
+        <li>関節角度制限設定</li>
+        <li>リアルタイム状態監視</li>
+        <li>軌道実行機能</li>
+    </ul>
+
+    <div class="page-break"></div>
+
+    <h2>2. インストールと要件</h2>
+
+    <h3>システム要件</h3>
+    <ul>
+        <li>Python 3.6以上</li>
+        <li>ネットワーク接続（UDP通信対応）</li>
+        <li>ロボットアームハードウェア（UDP制御対応）</li>
+    </ul>
+
+    <h3>必要なモジュール</h3>
+    <div class="code">import time
+import socket
+from typing import List, Optional</div>
+
+    <div class="info">
+        標準ライブラリのみを使用しているため、追加のインストールは不要です。
+    </div>
+
+    <h2>3. クラス初期化</h2>
+
+    <div class="method-signature">
+RobotArmSDK(ip_address: str = "192.168.11.10", port: int = 4210, 
+           num_joints: int = 6, timeout: float = 1.0)
+    </div>
+
+    <div class="parameters">
+        <strong>パラメータ:</strong><br>
+        • <strong>ip_address</strong> (str): ロボットアームのIPアドレス（デフォルト: "192.168.11.10"）<br>
+        • <strong>port</strong> (int): UDP通信用ポート番号（デフォルト: 4210）<br>
+        • <strong>num_joints</strong> (int): ロボットアームの関節数（デフォルト: 6）<br>
+        • <strong>timeout</strong> (float): 通信タイムアウト時間（秒、デフォルト: 1.0）
+    </div>
+
+    <div class="example">
+        <h4>初期化例</h4>
+        <div class="code"># デフォルト設定で初期化
+robot = RobotArmSDK()
+
+# カスタム設定で初期化
+robot = RobotArmSDK(
+    ip_address="192.168.1.100",
+    port=5000,
+    num_joints=6,
+    timeout=2.0
+)</div>
+    </div>
+
+    <div class="page-break"></div>
+
+    <h2>4. 接続管理</h2>
+
+    <h3>4.1 接続</h3>
+    <div class="method-signature">connect() -> bool</div>
+
+    <p>ロボットアームとの接続を確立します。接続テスト用のパケットを送信し、応答を確認して接続状態を判定します。</p>
+
+    <div class="returns">
+        <strong>戻り値:</strong> bool - 接続成功時True、失敗時False
+    </div>
+
+    <div class="example">
+        <h4>接続例</h4>
+        <div class="code">robot = RobotArmSDK()
+if robot.connect():
+    print("接続成功")
+else:
+    print("接続失敗")</div>
+    </div>
+
+    <h3>4.2 切断</h3>
+    <div class="method-signature">disconnect() -> None</div>
+
+    <p>ロボットアームとの接続を安全に切断します。切断コマンドを送信後、ソケットを閉じます。</p>
+
+    <div class="example">
+        <h4>切断例</h4>
+        <div class="code"># 作業完了後の切断
+robot.disconnect()</div>
+    </div>
+
+    <div class="warning">
+        プログラム終了前には必ずdisconnect()を呼び出してください。
+    </div>
+
+    <h2>5. 関節制御</h2>
+
+    <h3>5.1 関節角度の取得</h3>
+
+    <h4>個別関節角度取得</h4>
+    <div class="method-signature">get_joint_angle(joint_id: int) -> Optional[float]</div>
+
+    <div class="parameters">
+        <strong>パラメータ:</strong><br>
+        • <strong>joint_id</strong> (int): 関節ID（0から始まる）
+    </div>
+
+    <div class="returns">
+        <strong>戻り値:</strong> float | None - 関節角度（度）、エラー時はNone
+    </div>
+
+    <h4>全関節角度取得</h4>
+    <div class="method-signature">get_all_joint_angles() -> List[float]</div>
+
+    <div class="returns">
+        <strong>戻り値:</strong> List[float] - すべての関節角度のリスト
+    </div>
+
+    <div class="example">
+        <h4>関節角度取得例</h4>
+        <div class="code"># 個別関節の角度を取得
+angle = robot.get_joint_angle(0)  # 第1関節
+print(f"第1関節の角度: {angle}度")
+
+# 全関節の角度を取得
+all_angles = robot.get_all_joint_angles()
+print(f"全関節角度: {all_angles}")</div>
+    </div>
+
+    <div class="page-break"></div>
+
+    <h3>5.2 関節角度の設定</h3>
+
+    <h4>安全な関節角度設定</h4>
+    <div class="method-signature">set_joint_angle(joint_id: int, angle: float, speed: float = 50.0, 
+                step: float = 1.0, waitsec: float = 0.001) -> bool</div>
+
+    <p>指定した関節を段階的に目標角度まで安全に動作させます。step角度ずつ動作し、各ステップ間でwaitsec秒待機します。</p>
+
+    <div class="parameters">
+        <strong>パラメータ:</strong><br>
+        • <strong>joint_id</strong> (int): 関節ID（0から始まる）<br>
+        • <strong>angle</strong> (float): 目標角度（度）<br>
+        • <strong>speed</strong> (float): 動作速度（度/秒、デフォルト: 50.0）<br>
+        • <strong>step</strong> (float): 1回の動作ステップ角度（度、デフォルト: 1.0）<br>
+        • <strong>waitsec</strong> (float): ステップ間の待機時間（秒、デフォルト: 0.001）
+    </div>
+
+    <h4>直接関節角度設定</h4>
+    <div class="method-signature">set_joint_angle_unsafe(joint_id: int, angle: float, speed: float = 50.0) -> bool</div>
+
+    <p>指定した関節を直接目標角度に設定します。段階的な動作制御は行いません。</p>
+
+    <div class="warning">
+        set_joint_angle_unsafe()は急激な動作を引き起こす可能性があります。安全性を重視する場合はset_joint_angle()を使用してください。
+    </div>
+
+    <div class="example">
+        <h4>関節角度設定例</h4>
+        <div class="code"># 安全な段階的動作
+success = robot.set_joint_angle(
+    joint_id=0, 
+    angle=45.0, 
+    speed=30.0, 
+    step=2.0, 
+    waitsec=0.01
+)
+
+# 直接設定（注意して使用）
+success = robot.set_joint_angle_unsafe(
+    joint_id=1, 
+    angle=90.0, 
+    speed=50.0
+)</div>
+    </div>
+
+    <h3>5.3 全関節同時制御</h3>
+    <div class="method-signature">set_all_joint_angles(angles: List[float], speed: float = 50.0) -> bool</div>
+
+    <p>すべての関節の角度を同時に設定します。</p>
+
+    <div class="parameters">
+        <strong>パラメータ:</strong><br>
+        • <strong>angles</strong> (List[float]): すべての関節の目標角度のリスト<br>
+        • <strong>speed</strong> (float): 動作速度（度/秒、デフォルト: 50.0）
+    </div>
+
+    <div class="example">
+        <h4>全関節制御例</h4>
+        <div class="code"># 6軸アームの全関節を設定
+target_angles = [0.0, 45.0, -30.0, 0.0, 60.0, 0.0]
+success = robot.set_all_joint_angles(target_angles, speed=40.0)</div>
+    </div>
+
+    <div class="page-break"></div>
+
+    <h2>6. 安全機能</h2>
+
+    <h3>6.1 関節角度制限</h3>
+    <div class="method-signature">set_joint_limits(joint_id: int, min_angle: float, max_angle: float) -> bool</div>
+
+    <p>関節の動作可能角度範囲を設定します。設定された制限を超える角度指定は拒否されます。</p>
+
+    <div class="parameters">
+        <strong>パラメータ:</strong><br>
+        • <strong>joint_id</strong> (int): 関節ID（0から始まる）<br>
+        • <strong>min_angle</strong> (float): 最小角度（度）<br>
+        • <strong>max_angle</strong> (float): 最大角度（度）
+    </div>
+
+    <div class="example">
+        <h4>角度制限設定例</h4>
+        <div class="code"># 第1関節の動作範囲を-90度から90度に制限
+robot.set_joint_limits(0, -90.0, 90.0)
+
+# 第2関節の動作範囲を-45度から135度に制限
+robot.set_joint_limits(1, -45.0, 135.0)</div>
+    </div>
+
+    <h3>6.2 関節オフセット</h3>
+    <div class="method-signature">set_joint_offset(joint_id: int, angle: float) -> None</div>
+
+    <p>関節の角度オフセットを設定します。角度設定時に自動的にオフセットが加算されます。</p>
+
+    <div class="example">
+        <h4>オフセット設定例</h4>
+        <div class="code"># 第1関節に10度のオフセットを設定
+robot.set_joint_offset(0, 10.0)
+
+# この後のset_joint_angle(0, 45.0)は実際には55度に設定される</div>
+    </div>
+
+    <h3>6.3 ホームポジション</h3>
+    <div class="method-signature">move_to_home_position() -> bool</div>
+
+    <p>すべての関節を0度（ホームポジション）に移動します。</p>
+
+    <div class="example">
+        <h4>ホームポジション移動例</h4>
+        <div class="code"># ホームポジションに移動
+if robot.move_to_home_position():
+    print("ホームポジションに移動しました")</div>
+    </div>
+
+    <div class="page-break"></div>
+
+    <h2>7. 軌道実行</h2>
+
+    <div class="method-signature">execute_trajectory(trajectory: List[List[float]], speed: float = 50.0) -> bool</div>
+
+    <p>複数の関節角度ポイントで構成される軌道を順次実行します。</p>
+
+    <div class="parameters">
+        <strong>パラメータ:</strong><br>
+        • <strong>trajectory</strong> (List[List[float]]): 関節角度のリストのリスト<br>
+        • <strong>speed</strong> (float): 動作速度（度/秒、デフォルト: 50.0）
+    </div>
+
+    <div class="example">
+        <h4>軌道実行例</h4>
+        <div class="code"># 3つのポイントからなる軌道を定義
+trajectory = [
+    [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],      # ポイント1: ホーム
+    [45.0, 30.0, -45.0, 0.0, 60.0, 0.0], # ポイント2: 中間
+    [90.0, 45.0, -90.0, 0.0, 90.0, 0.0]  # ポイント3: 終点
+]
+
+# 軌道実行
+success = robot.execute_trajectory(trajectory, speed=30.0)
+if success:
+    print("軌道実行完了")</div>
+    </div>
+
+    <h2>8. 実用例</h2>
+
+    <div class="example">
+        <h4>基本的な制御フロー</h4>
+        <div class="code">#!/usr/bin/env python3
+import time
+from robot_arm_sdk import RobotArmSDK
+
+def main():
+    # SDK初期化
+    robot = RobotArmSDK(ip_address="192.168.11.10")
+    
+    try:
+        # 接続
+        if not robot.connect():
+            print("接続に失敗しました")
+            return
+        
+        # 安全制限設定
+        for i in range(6):
+            robot.set_joint_limits(i, -180.0, 180.0)
+        
+        # ホームポジションに移動
+        print("ホームポジションに移動中...")
+        robot.move_to_home_position()
+        time.sleep(2)
+        
+        # 各関節を順次動作
+        print("各関節を順次動作中...")
+        for joint_id in range(6):
+            print(f"関節{joint_id + 1}を45度に設定")
+            robot.set_joint_angle(joint_id, 45.0, speed=30.0)
+            time.sleep(1)
+        
+        # ホームに戻る
+        print("ホームポジションに戻る...")
+        robot.move_to_home_position()
+        
+    except KeyboardInterrupt:
+        print("プログラムが中断されました")
+    
+    finally:
+        # 必ず切断
+        robot.disconnect()
+        print("プログラム終了")
+
+if __name__ == "__main__":
+    main()</div>
+    </div>
+
+    <div class="page-break"></div>
+
+    <h2>9. トラブルシューティング</h2>
+
+    <table>
+        <tr>
+            <th>問題</th>
+            <th>原因</th>
+            <th>解決方法</th>
+        </tr>
+        <tr>
+            <td>接続エラー: タイムアウト</td>
+            <td>ネットワーク接続問題、IPアドレス設定ミス</td>
+            <td>IPアドレス、ポート番号、ネットワーク接続を確認</td>
+        </tr>
+        <tr>
+            <td>接続エラー: 予期しない応答</td>
+            <td>ロボットアームの応答プロトコル問題</td>
+            <td>ロボットアームの設定、ファームウェアを確認</td>
+        </tr>
+        <tr>
+            <td>角度が制限範囲外です</td>
+            <td>設定角度が制限を超えている</td>
+            <td>set_joint_limits()で制限を確認・調整</td>
+        </tr>
+        <tr>
+            <td>応答タイムアウト</td>
+            <td>通信遅延、ロボットアーム処理遅延</td>
+            <td>timeout値を増加、ネットワーク状態を確認</td>
+        </tr>
+        <tr>
+            <td>無効な関節ID</td>
+            <td>関節ID範囲外指定</td>
+            <td>0からnum_joints-1の範囲で指定</td>
+        </tr>
+    </table>
+
+    <div class="warning">
+        ロボットアームの動作中は安全に注意し、緊急停止機能を常に利用可能にしてください。
+    </div>
+
+    <h3>デバッグ情報の活用</h3>
+    <p>SDKは詳細なエラーメッセージとデバッグ情報を提供します。問題発生時は以下を確認してください：</p>
+    <ul>
+        <li>コンソールに出力されるエラーメッセージ</li>
+        <li>ネットワーク接続状態</li>
+        <li>ロボットアームの電源とネットワーク設定</li>
+        <li>UDP通信の可用性</li>
+    </ul>
+
+    <h2>10. 通信プロトコル仕様</h2>
+
+    <h3>送信コマンド形式</h3>
+    <table>
+        <tr>
+            <th>コマンド</th>
+            <th>形式</th>
+            <th>説明</th>
+        </tr>
+        <tr>
+            <td>接続テスト</td>
+            <td>CONNECT\n</td>
+            <td>接続確認用コマンド</td>
+        </tr>
+        <tr>
+            <td>切断</td>
+            <td>DISCONNECT\n</td>
+            <td>接続切断用コマンド</td>
+        </tr>
+        <tr>
+            <td>関節角度取得</td>
+            <td>GET_JOINT_ANGLES\n</td>
+            <td>全関節角度取得</td>
+        </tr>
+        <tr>
+            <td>関節角度設定</td>
+            <td>SET_JOINT_ANGLE,{id},{angle},{speed}\n</td>
+            <td>個別関節角度設定</td>
+        </tr>
+        <tr>
+            <td>全関節角度設定</td>
+            <td>SET_ALL_JOINT_ANGLES,{angles},{speed}\n</td>
+            <td>全関節同時設定</td>
+        </tr>
+    </table>
+
+    <h3>応答形式</h3>
+    <ul>
+        <li><strong>OK</strong>: コマンド実行成功</li>
+        <li><strong>角度値（カンマ区切り）</strong>: GET_JOINT_ANGLESの応答</li>
+        <li><strong>エラーメッセージ</strong>: コマンド実行失敗時</li>
+    </ul>
+
+    <div class="footer">
+        <p>ロボットアームSDK v1.0 - 開発者向け説明書</p>
+        <p>Copyright © 2024 Robot Control Systems</p>
+    </div>
+</body>
+</html>
