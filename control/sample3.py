@@ -1,3 +1,8 @@
+
+#
+# 最初に pip3 install pygameが必要
+#
+
 import sys
 import pygame
 import tagurobo
