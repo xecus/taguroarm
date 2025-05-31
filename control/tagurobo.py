@@ -320,7 +320,7 @@ class RobotArmSDK:
             print(f"エラー: ロボットからの応答: {response}")
             return False
 
-    def set_all_joint_angles(
+    def set_all_joint_angles_unsafe(
             self, angles: List[float], speed: float = 50.0
     ) -> bool:
         """
@@ -358,6 +358,97 @@ class RobotArmSDK:
         else:
             print(f"エラー: ロボットからの応答: {response if response else 'タイムアウト'}")
             return False
+
+    def set_all_joint_angles(
+            self, angles: List[float], speed: float = 50.0,
+            step: float = 1.0, waitsec: float = 0.01
+    ) -> bool:
+        """
+        すべての関節の角度を安全に設定する（ステップごとに移動）
+
+        Args:
+            angles: すべての関節の目標角度のリスト
+            speed: 動作速度 (度/秒)
+            step: 1回のステップで動く角度（度）
+            waitsec: 各ステップ間の待機時間（秒）
+
+        Returns:
+            bool: 設定成功したかどうか
+        """
+        if not self._check_connection():
+            return False
+
+        if len(angles) != self.num_joints:
+            print("エラー: 角度リストの長さが関節数と一致しません")
+            return False
+
+        # すべての角度が制限内かチェック
+        for i, angle in enumerate(angles):
+            min_angle, max_angle = self.joint_limits[i]
+            if angle < min_angle or angle > max_angle:
+                print(f"エラー: 関節{i}の角度が制限範囲外です ({min_angle}°〜{max_angle}°)")
+                return False
+
+        # 現在の角度を取得
+        self._update_current_state()
+        start_angles = self.joint_angles.copy()
+        target_angles = angles.copy()
+
+        # 各関節の移動方向と距離を計算
+        move_directions = []
+        max_steps = 0
+
+        for i in range(self.num_joints):
+            diff = target_angles[i] - start_angles[i]
+            if abs(diff) < 0.01:  # 移動が必要ない場合
+                move_directions.append(0.0)
+            else:
+                direction = step if diff > 0 else -step
+                move_directions.append(direction)
+                steps_needed = int(abs(diff) / step) + 1
+                max_steps = max(max_steps, steps_needed)
+
+        # ステップごとに移動
+        for step_count in range(max_steps):
+            current_angles = []
+            all_reached = True
+
+            for i in range(self.num_joints):
+                start = start_angles[i]
+                target = target_angles[i]
+                direction = move_directions[i]
+
+                if direction == 0.0:
+                    # 移動不要
+                    current_angles.append(target)
+                else:
+                    # 次の位置を計算
+                    next_angle = start + direction * (step_count + 1)
+
+                    # 目標角度を超えないようにクリップ
+                    if direction > 0:
+                        next_angle = min(next_angle, target)
+                        if next_angle < target:
+                            all_reached = False
+                    else:
+                        next_angle = max(next_angle, target)
+                        if next_angle > target:
+                            all_reached = False
+
+                    current_angles.append(next_angle)
+
+            # 全関節を同時に設定
+            if not self.set_all_joint_angles_unsafe(current_angles, speed):
+                return False
+
+            # 目標に到達したら終了
+            if all_reached:
+                break
+
+            # ステップ間の待機
+            time.sleep(waitsec)
+
+        return True
 
     def move_to_home_position(self) -> bool:
         """
