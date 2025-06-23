@@ -1,6 +1,6 @@
 # TAGURO ARM
 
-つくったよん
+※アセット整理中
 
 ![Top Image](https://github.com/xecus/taguroarm/blob/main/images/top.png)
 
